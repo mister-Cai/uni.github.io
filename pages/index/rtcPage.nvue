@@ -1,0 +1,327 @@
+<template>
+	<view class="content" :style="{width: windowWidth + 'px',height: windowHeight + 'px'}">
+		
+		<!-- 视频渲染(多人) -->
+		<scroll-view scroll-y="true" class="CanvasView"
+			:style="{width: windowWidth + 'px',height: windowHeight + 'px',paddingTop: peeridInfo.length == 0 ? '0px' : '20px'}">
+			<!-- 远端用户视频渲染 -->
+			<view v-for="peerid in peeridInfo" v-if="info.roleChoices == 2" :key="peerid.uid" :class="peeridInfoStyle">
+				<view style="flex: 1;">
+					<AR-CanvasView :ref="'remote'+peerid.uid" style="flex: 1;" />
+				</view>
+				<!-- 远端关闭视频后显示 -->
+				<view class="location-none"
+					:style="{left: peerid.videoStatus ? '-800px' : '0px',backgroundColor:  peerid.videoStatus ? '':'#0A1621',opacity: peerid.videoStatus ? '0':'1'}">
+					<image style="width: 60px;height: 80px;" src="../../static/icon_launch_logo.png" mode=""></image>
+				</view>
+				<view class="user-hint">
+					<text class="hint-text">{{peerid.uid}}</text>
+				</view>
+			</view>
+		</scroll-view>
+		<!-- 相关操作 -->
+		<view class="options" :style="{width: windowWidth + 'px'}">
+			<!-- 视频相关操作(非游客显示) -->
+			<view style="flex-direction: row;justify-content: space-between;margin-bottom: 20px;"
+				v-if="info.roleChoices == 2">
+				<!-- 视频开关 -->
+				<view class="icon" @click="videoFn">
+					<image class="icon_img" src="../../static/vi_on.png" v-if="video"></image>
+					<image class="icon_img" src="../../static/vi_in.png" v-else></image>
+					<text class="icon_text">视频</text>
+				</view>
+				<!-- 前后摄像头转换 -->
+				<view class="icon" @click="cameraFn">
+					<image class="icon_img" src="../../static/camera.png" mode=""></image>
+					<text class="icon_text">摄像{{camera?'前':'后'}}</text>
+				</view>
+			</view>
+			<!-- 音频相关操作 -->
+			<view :style="{flexDirection: 'row',justifyContent: 'space-between'}">
+				<!-- 音频开关(非游客显示) -->
+				<view class="icon" @click="audioFn">
+					<image class="icon_img" src="../../static/au_in.png" v-if="audio"></image>
+					<image class="icon_img" src="../../static/au_on.png" v-else></image>
+					<text class="icon_text">静音</text>
+				</view>
+				<!-- 挂断 -->
+				<view class="icon" @click="closeFn">
+					<image class="icon_img" src="../../static/over.png"></image>
+					<text class="icon_text">挂断</text>
+				</view>
+				<!-- 扬声器开关(非游客显示) -->
+				<view class="icon" @click="speakerphoneFn">
+					<image class="icon_img" src="../../static/icon_speakers.png" v-if="Speakerphone"></image>
+					<image class="icon_img" src="../../static/icon_speaker.png" v-else></image>
+					<text class="icon_text">扬声器</text>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import Utils from "../../utils/until.js";
+	import RTC from "../../utils/rtc.js";
+	// import myLoading from '@/components/my-loading/my-loading.nvue'
+	export default {
+		// components: {
+		// 	myLoading
+		// },
+		data() {
+			return {
+				// RTC 所需信息
+				info: {},
+				// 生成远端视频容器
+				peeridInfo: [],
+				// 远端视频容器样式
+				peeridInfoStyle: "video_local",
+
+				windowWidth: 400,
+				windowHeight: 800,
+
+				// 相关操作
+				audio: true, // 音频开关
+				Speakerphone: true, // 免提
+				video: true, // 视频开关
+				camera: true, // 摄像头前后
+			}
+		},
+		watch: {
+			peeridInfo: function(newName) {
+				// 根据用户数量控制样式
+				const oLength = this.info.roleChoices == 2 ? newName.length : (newName.length + 1);
+				if (oLength > 1) {
+					this.peeridInfoStyle = "video_local_1";
+				} else {
+					this.peeridInfoStyle = "video_local";
+				}
+			}
+		},
+		async created() {
+			const oInfo = await Utils.getWidthHeight();
+			this.windowWidth = oInfo.windowWidth;
+			this.windowHeight = oInfo.windowHeight;
+			// 监测远端用户加入(创建容器)
+			uni.$on("peeridJoinChannel", data => {
+				console.log(132465979464)
+				if (data) {
+					const oa = this.peeridInfo.filter((item) => {
+						return item.uid == data
+					})
+					if (oa.length == 0) {
+						
+						this.peeridInfo.push({
+							uid: data,
+							videoStatus: true,
+						});
+						this.$nextTick(() => {
+							uni.$emit("CanvasView", {
+								remote: this.$refs['remote' + data],
+								peerid: data,
+							})
+						})
+					}
+				}
+			});
+			// 监测远端用户离开(删除容器)
+			uni.$on("UserOffline", data => {
+				console.log("监测远端用户离开", data);
+				if (data) {
+					this.closeFn()
+					this.peeridInfo.splice(this.peeridInfo.findIndex(item => item.uid === data.uid), 1);
+				}
+			});
+			// 监测远端用户视频状态
+			uni.$on("VideoStateChanged", data => {
+				if (data) {
+					this.peeridInfo.map(item => {
+						if (item.uid == data.uid) {
+							// 远端用户关闭视频
+							if (data.reason == 5 && data.state == 0) {
+								item.videoStatus = false;
+								// 远端用户开启视频
+							} else if (data.state == 2 && data.reason == 0) {
+								item.videoStatus = true;
+							}
+						}
+					})
+				}
+			})
+		},
+		onLoad(options) {
+			if (options.info) {
+				uni.showLoading({
+					title: '加载中,请稍后'
+				});
+				const oInfo = JSON.parse(options.info);
+				this.info = Object.assign(this.info, oInfo);
+				// 初始化
+				this.init();
+			}
+		},
+		beforeDestroy() {
+			// 移除App级别的所有事件监听器
+			uni.$off();
+		},
+		methods: {
+			
+			// 挂断
+			async closeFn() {
+				// 销毁实例
+				await RTC.destroyRtc();
+				// 返回首页
+				uni.redirectTo({
+					url: 'index'
+				});
+			},
+			// 视频开关
+			videoFn() {
+				this.video = !this.video;
+				RTC.enableLocalVideo(this.video);
+			},
+			// 摄像头前后
+			cameraFn() {
+				this.camera = !this.camera;
+				RTC.switchCamera();
+			},
+			// 音频开关
+			audioFn() {
+				this.audio = !this.audio;
+				RTC.enableLocalAudio(this.audio);
+			},
+			// 免提
+			speakerphoneFn() {
+				this.Speakerphone = !this.Speakerphone;
+				RTC.setEnableSpeakerphone(this.Speakerphone);
+				
+			},
+			async init() {
+				// 初始化 RTC 实例
+				await RTC.init(this.info);
+				// 启用视频模块
+				await RTC.enableVideo();
+				// 角色为观众时 停止本地视频采集
+				// if (this.info.roleChoices == 2) {
+				// 	await RTC.enableLocalVideo(false)
+				// }
+				// 加入频道
+				await RTC.joinChannel();
+				uni.hideLoading();
+			},
+			// 禁止穿透
+			penetrateFn(e) {
+				e.stopPropagation()
+			},
+		},
+	}
+</script>
+
+<style scoped>
+	.content {
+		background-color: #2F3041;
+	}
+
+	.text {
+		color: #FFFFFF;
+		margin-top: 20px;
+	}
+
+	/* 提示 */
+	.hint {
+		position: fixed;
+		align-items: center;
+	}
+
+	.location-none {
+		flex: 1;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		right: 0;
+		justify-content: center;
+		align-items: center;
+	}
+
+	/* 用户标识 */
+	.user-hint {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		background-color: #2F3041;
+		opacity: 0.5;
+		padding: 4px 10px;
+	}
+    
+	.hint-text {
+		color: #FFFFFF;
+		opacity: 1;
+	}
+	
+	.CanvasView {
+		flex-wrap: wrap;
+		flex-direction: row;
+		padding: 60px 0 0;
+	}
+
+	/* 1个视频 */
+	.video_local {
+		flex: 1;
+	}
+
+	/* 4个视频 */
+	.video_local_1 {
+		width: 375rpx;
+		height: 420rpx;
+	}
+
+	/* 相关操作 */
+	.options {
+		position: fixed;
+		bottom: 20px;
+		padding: 0 20px;
+		width: 100%;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+
+	.icon {
+		/* background-color: #007AFF; */
+		justify-content: center;
+		align-items: center;
+	}
+
+	.icon_img {
+		width: 60px;
+		height: 60px;
+	}
+
+	.icon_text {
+		color: #FFFFFF;
+		margin: 10px;
+	}
+
+	/* 旁路推流 */
+	.live {
+		position: fixed;
+		background-color: #000000;
+		opacity: 0.8;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.live-input {
+		height: 110rpx;
+		padding: 0 26px;
+		background-color: #2F3041;
+		border-radius: 6px;
+		color: #FFFFFF;
+		opacity: 1;
+		text-align: center;
+	}
+
+	.live-options {
+		flex-direction: column;
+		padding: 0 20px;
+	}
+</style>
