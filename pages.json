@@ -1,12 +1,21 @@
 {
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
 		{
+			"path" : "pages/index/movie",
+			"style" :                                                                                    
+			{
+				"navigationBarTitleText": "",
+				"enablePullDownRefresh": false
+			}
+			
+		},
+		{
 			"path": "pages/index/index",
 			"style": {
 				"navigationBarTitleText": "uni-app"
 			}
-		}
-	    ,{
+		},
+	    {
             "path" : "pages/index/rtcPage",
             "style" :                                                                                    
             {
@@ -14,9 +23,36 @@
                 "enablePullDownRefresh": false
             }
             
-        }
-		,{
+        },
+		{
 		    "path" : "pages/index/login",
+		    "style" :                                                                                    
+		    {
+		        "navigationBarTitleText": "",
+		        "enablePullDownRefresh": false
+		    }
+		    
+		},
+		{
+		    "path" : "pages/index/register",
+		    "style" :                                                                                    
+		    {
+		        "navigationBarTitleText": "",
+		        "enablePullDownRefresh": false
+		    }
+		    
+		},
+		{
+		    "path" : "pages/index/special",
+		    "style" :                                                                                    
+		    {
+		        "navigationBarTitleText": "",
+		        "enablePullDownRefresh": false
+		    }
+		    
+		},
+		{
+		    "path" : "pages/index/friend",
 		    "style" :                                                                                    
 		    {
 		        "navigationBarTitleText": "",
@@ -25,6 +61,30 @@
 		    
 		}
     ],
+	"tabBar":{
+		"color": "#7A7E83",
+		"selectedColor": "#325de3",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"iconWidth":"30px",
+		"height":"50px",
+		"list": [{
+		    "pagePath": "pages/index/movie",
+		    "iconPath": "/static/move1.png",
+		    "selectedIconPath": "/static/move.png",
+		    "text": "电影"
+		},{
+			  "pagePath": "pages/index/special",
+			  "iconPath": "/static/big1.png",
+			  "selectedIconPath": "/static/big.png",
+			  "text": "特殊"
+		  },{
+			  "pagePath": "pages/index/friend",
+			  "iconPath": "/static/friend1.png",
+			  "selectedIconPath": "/static/friend.png",
+			  "text": "好友"
+		  }]
+	},
 	"globalStyle": {
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "uni-app",

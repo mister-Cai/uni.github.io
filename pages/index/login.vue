@@ -6,15 +6,16 @@
 		<form>
 			<input type="number" v-model="phone" class="text" value="" placeholder="手机号" onfocus="this.value = '';"
 				onblur="if (this.value == '') {this.value = '';}">
-			<input type="password" v-model="password" class="password" value="" placeholder="密码">
+			<input v-model="password" class="password" value="" placeholder="密码">
 			<div class="submit"><input type="submit" disabled="true" class="submits" @click="login()" value="登录"></div>
 			<div class="clear"></div>
 		</form>
-		<p class="sign">建立新账号? <a href="#"> 注册</a></p>
+		<navigator url="register" class="sign">建立新账号? 注册</navigator>
 	</div>
 </template>
 
 <script>
+import {loginapi} from "@/utils/api.js"
 	export default{
 		data(){
 			return{
@@ -24,7 +25,42 @@
 		},
 		methods:{
 			login(){
-				
+				if(this.phone.length!=11){
+					uni.showToast({
+						icon: 'none',
+						title: '手机号有误',
+						duration:2000
+					});
+					return;
+				}
+				let rule=/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{6,10}$/
+				if(!rule.exec(this.password)){
+					uni.showToast({
+						icon: 'none',
+						title: '密码格式为6至10位字母和数字',
+						duration:2000
+					});
+					return;
+				}
+				var prams={
+					phone:this.phone,
+					password:this.password
+				}
+				loginapi(prams).then(res=>{
+					if(res.code==0){
+						uni.showToast({
+							icon: 'none',
+							title: '登录成功',
+							duration:2000
+						});
+					}else{
+						uni.showToast({
+							icon: 'none',
+							title: res.msg,
+							duration:2000
+						});
+					}
+				})
 			}
 		}
 	}
@@ -83,10 +119,6 @@
 		margin: 1em 0;
 	}
 
-	.app-block p.sign {
-		padding-top: 3em;
-	}
-
 	.app-block .submits {
 		font-size: 20px;
 		font-weight: 300;
@@ -107,68 +139,25 @@
 		-moz-border-radius: 2em;
 		border: 3px solid #EACB20
 	}
-
-	.app-block p a,
-	.app-block p.sign {
+	.app-block .sign {
 		color: #AFAFB0;
 		font-weight: 400;
 		font-size: 1em;
 	}
-
-	.app-block p {
-		padding-top: 1em;
-	}
-
-	.app-block p a:hover,
-	.app-block p.sign a:hover {
-		text-decoration: underline;
-		color: #EACB20;
-	}
-		.copy-right p {
-			font-size: 0.9em;
-		}
-
-		.new h3 a,
-		.new h4 a {
-			font-size: 0.9em;
-		}
 
 		form {
 			width: 94%;
 			margin: 0 auto;
 		}
 
-		.app-block input[type="submit"] {
-			font-size: 18px;
-			padding: 14px 15px;
-		}
-
 		.app-block {
 			margin: 0 auto 0 2.2%;
-			padding: 1em 4em 2em 4em;
+			padding: 0 4em;
 		}
 
 		.buttons {
 			margin: 0em 0 1em 0;
 			padding: 3em 0em 1em 0em;
-		}
-
-		.block h2 {
-			padding: 0.8em 0;
-			font-size: 1.4em;
-		}
-
-		.app-block p a,
-		.app-block p.sign a {
-			font-size: 0.9em;
-		}
-
-		.app-block p {
-			padding-top: 0em;
-		}
-
-		.app-block p.sign {
-			padding: 2em 0 2em 0;
 		}
 
 </style>

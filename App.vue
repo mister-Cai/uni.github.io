@@ -10,9 +10,9 @@
 			}
 			
 			console.log('App Launch');
-			uni.reLaunch({
-				url:"/pages/index/login"
-			})
+			// uni.reLaunch({
+			// 	url:"/pages/index/login"
+			// })
 		},
 		onShow: function() {
 			console.log('App Show')

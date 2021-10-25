@@ -1,0 +1,24 @@
+{
+  "name": "yiqikan",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "element-ui": "^2.15.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mister-Cai/uni.github.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mister-Cai/uni.github.io/issues"
+  },
+  "homepage": "https://github.com/mister-Cai/uni.github.io#readme"
+}
